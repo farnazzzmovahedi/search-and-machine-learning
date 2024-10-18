@@ -21,57 +21,6 @@ import time
 import search
 
 
-# def cornersHeuristic(state, problem):
-#     pacman_pos, eaten_corners = state
-#     remaining_corners = [corner for corner, eaten in zip(problem.corners, eaten_corners) if not eaten]
-#
-#     if not remaining_corners:
-#         return 0
-#
-#     # Calculate distances from pacman's current position to each remaining corner
-#     distances_to_corners = [util.manhattanDistance(pacman_pos, corner) for corner in remaining_corners]
-#
-#     # Start by getting the minimum distance to a corner (greedy start)
-#     heuristic_cost = min(distances_to_corners)
-#
-#     # Now, calculate the Minimum Spanning Tree (MST) approximation over remaining corners
-#     from itertools import combinations
-#
-#     # Create a fully connected graph between remaining corners with Manhattan distances
-#     corner_graph = []
-#     for corner1, corner2 in combinations(remaining_corners, 2):
-#         distance = util.manhattanDistance(corner1, corner2)
-#         corner_graph.append((distance, corner1, corner2))
-#
-#     # Sort the edges of the graph by distance (ascending)
-#     corner_graph.sort()
-#
-#     # Use Kruskal's algorithm to estimate the MST cost
-#     mst_cost = 0
-#     corner_sets = {corner: corner for corner in remaining_corners}  # Union-Find structure for Kruskal's
-#
-#     def find(corner):
-#         if corner_sets[corner] != corner:
-#             corner_sets[corner] = find(corner_sets[corner])
-#         return corner_sets[corner]
-#
-#     def union(corner1, corner2):
-#         root1, root2 = find(corner1), find(corner2)
-#         if root1 != root2:
-#             corner_sets[root1] = root2
-#
-#     edges_used = 0
-#     for distance, corner1, corner2 in corner_graph:
-#         if find(corner1) != find(corner2):
-#             union(corner1, corner2)
-#             mst_cost += distance
-#             edges_used += 1
-#             if edges_used == len(remaining_corners) - 1:
-#                 break
-#
-#     # Heuristic is the distance to the closest corner + the MST cost for the remaining corners
-#     return heuristic_cost + mst_cost
-
 def cornersHeuristic(state, problem):
     pacman_pos, eaten_corners = state
     remaining_corners = [corner for corner, eaten in zip(problem.corners, eaten_corners) if not eaten]
@@ -79,25 +28,54 @@ def cornersHeuristic(state, problem):
     if not remaining_corners:
         return 0
 
-    # Start with Pacman's position
+    # Greedy TSP-like heuristic (nearest corner first)
     current_position = pacman_pos
-    total_heuristic_cost = 0
+    total_greedy_cost = 0
+    greedy_remaining = remaining_corners[:]
 
-    while remaining_corners:
-        # Find the nearest corner to the current position
-        distances_to_corners = [(util.manhattanDistance(current_position, corner), corner) for corner in remaining_corners]
+    while greedy_remaining:
+        distances_to_corners = [(util.manhattanDistance(current_position, corner), corner) for corner in
+                                greedy_remaining]
         min_distance, closest_corner = min(distances_to_corners)
-
-        # Add the distance to the heuristic cost
-        total_heuristic_cost += min_distance
-
-        # Move Pacman to this corner
+        total_greedy_cost += min_distance
         current_position = closest_corner
+        greedy_remaining.remove(closest_corner)
 
-        # Remove the visited corner from the list of remaining corners
-        remaining_corners.remove(closest_corner)
+    # Manhattan distance to the farthest corner
+    farthest_distance = max([util.manhattanDistance(pacman_pos, corner) for corner in remaining_corners])
 
-    return total_heuristic_cost
+    # MST (Minimum Spanning Tree) heuristic
+    from itertools import combinations
+    corner_graph = []
+    for corner1, corner2 in combinations(remaining_corners, 2):
+        distance = util.manhattanDistance(corner1, corner2)
+        corner_graph.append((distance, corner1, corner2))
+    corner_graph.sort()
+
+    mst_cost = 0
+    corner_sets = {corner: corner for corner in remaining_corners}
+
+    def find(corner):
+        if corner_sets[corner] != corner:
+            corner_sets[corner] = find(corner_sets[corner])
+        return corner_sets[corner]
+
+    def union(corner1, corner2):
+        root1, root2 = find(corner1), find(corner2)
+        if root1 != root2:
+            corner_sets[root1] = root2
+
+    edges_used = 0
+    for distance, corner1, corner2 in corner_graph:
+        if find(corner1) != find(corner2):
+            union(corner1, corner2)
+            mst_cost += distance
+            edges_used += 1
+            if edges_used == len(remaining_corners) - 1:
+                break
+
+    # Final heuristic: max of the greedy TSP, MST, and farthest corner distance
+    return max(total_greedy_cost, mst_cost, farthest_distance)
 #######################################################
 #                DONT CHANGE THIS PART                #
 #######################################################
