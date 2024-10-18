@@ -55,18 +55,28 @@ class SearchProblem:
 
 
 def depthFirstSearch(problem):
+    # Use a stack for DFS
+    frontier = util.Stack()
+    start_state = problem.getStartState()
+    frontier.push((start_state, []))  # (state, actions)
+    explored = set()
 
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    while not frontier.isEmpty():
+        state, actions = frontier.pop()
 
+        if problem.isGoalState(state):
+            return actions
 
+        if state not in explored:
+            explored.add(state)
+
+            for successor, action, _ in problem.getSuccessors(state):
+                if successor not in explored:
+                    new_actions = actions + [action]
+                    frontier.push((successor, new_actions))
+
+    return []
 def breadthFirstSearch(problem):
-
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-
-
-def uniformCostSearch(problem):
 
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
@@ -76,10 +86,54 @@ def nullHeuristic(state, problem=None):
     return 0
 
 
-def aStarSearch(problem, heuristic=nullHeuristic):
+# UCS implementation
+def uniformCostSearch(problem):
+    frontier = util.PriorityQueue()
+    start_state = problem.getStartState()
+    frontier.push((start_state, [], 0), 0)  # (state, actions, cost), priority
+    explored = set()
 
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    while not frontier.isEmpty():
+        state, actions, cost = frontier.pop()
+
+        if problem.isGoalState(state):
+            return actions
+
+        if state not in explored:
+            explored.add(state)
+
+            for successor, action, step_cost in problem.getSuccessors(state):
+                if successor not in explored:
+                    new_actions = actions + [action]
+                    new_cost = cost + step_cost
+                    frontier.push((successor, new_actions, new_cost), new_cost)
+
+    return []
+
+
+# A* implementation
+def aStarSearch(problem, heuristic=nullHeuristic):
+    frontier = util.PriorityQueue()
+    start_state = problem.getStartState()
+    frontier.push((start_state, [], 0), 0)
+    explored = set()
+
+    while not frontier.isEmpty():
+        state, actions, cost = frontier.pop()
+
+        if problem.isGoalState(state):
+            return actions
+
+        if state not in explored:
+            explored.add(state)
+
+            for successor, action, step_cost in problem.getSuccessors(state):
+                new_actions = actions + [action]
+                new_cost = cost + step_cost
+                heuristic_cost = new_cost + heuristic(successor, problem)
+                frontier.push((successor, new_actions, new_cost), heuristic_cost)
+
+    return []
 
 
 # Abbreviations
