@@ -28,23 +28,24 @@ def cornersHeuristic(state, problem):
     if not remaining_corners:
         return 0
 
-    # Greedy TSP-like heuristic (nearest corner first)
+    num_remaining_corners = len(remaining_corners)
+
+    # --- 1. Greedy Nearest Corner ---
     current_position = pacman_pos
     total_greedy_cost = 0
     greedy_remaining = remaining_corners[:]
-
+    
     while greedy_remaining:
-        distances_to_corners = [(util.manhattanDistance(current_position, corner), corner) for corner in
-                                greedy_remaining]
+        distances_to_corners = [(util.manhattanDistance(current_position, corner), corner) for corner in greedy_remaining]
         min_distance, closest_corner = min(distances_to_corners)
         total_greedy_cost += min_distance
         current_position = closest_corner
         greedy_remaining.remove(closest_corner)
-
-    # Manhattan distance to the farthest corner
+    
+    # --- 2. Manhattan Distance to Farthest Corner ---
     farthest_distance = max([util.manhattanDistance(pacman_pos, corner) for corner in remaining_corners])
 
-    # MST (Minimum Spanning Tree) heuristic
+    # --- 3. MST (Minimum Spanning Tree) Heuristic ---
     from itertools import combinations
     corner_graph = []
     for corner1, corner2 in combinations(remaining_corners, 2):
@@ -74,8 +75,23 @@ def cornersHeuristic(state, problem):
             if edges_used == len(remaining_corners) - 1:
                 break
 
-    # Final heuristic: max of the greedy TSP, MST, and farthest corner distance
-    return max(total_greedy_cost, mst_cost, farthest_distance)
+    # --- 4. Penalizing the number of unexplored corners ---
+    unexplored_corner_penalty = num_remaining_corners * 5  # Increase this factor if needed
+
+    # --- 5. Dynamic weighting based on the number of remaining corners ---
+    if num_remaining_corners > 3:
+        weighted_mst = mst_cost * 1.5  # Give more importance to MST when many corners remain
+        weighted_greedy = total_greedy_cost * 0.5  # Less important for longer paths
+        weighted_farthest = farthest_distance * 0.8  # Slightly reduce farthest distance's weight
+    else:
+        weighted_mst = mst_cost * 0.8  # MST is less relevant for fewer corners
+        weighted_greedy = total_greedy_cost * 1.2  # Greedy pathfinding is more useful for fewer corners
+        weighted_farthest = farthest_distance * 1.5  # Give farthest distance more importance when close to finishing
+
+    # --- 6. Final heuristic: combining all parts with dynamic weights and penalties ---
+    heuristic_value = max(weighted_greedy, weighted_mst, weighted_farthest) + unexplored_corner_penalty
+    
+    return heuristic_value
 #######################################################
 #                DONT CHANGE THIS PART                #
 #######################################################
