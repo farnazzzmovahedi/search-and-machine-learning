@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from .metrics import mean_squared_error, r2_score
 
 class SGD:
-    def __init__(self, lr=0.001, epochs=100, batch_size=512, tol=1e-3, momentum=0.9):
+    def __init__(self, lr=0.001, epochs=1000, batch_size=1024, tol=1e-3, momentum=0.9):
         self.learning_rate = lr
         self.epochs = epochs
         self.batch_size = batch_size
@@ -65,7 +65,7 @@ class SGD:
             loss = mean_squared_error(y, y_pred)
             self.losses.append(loss)  # Store each epoch's loss
 
-            if epoch % 10 == 0:
+            if epoch % 100 == 0:
                 r2 = r2_score(y, y_pred)
                 print(f"Epoch {epoch}: Loss {loss}, R² {r2}")
 
@@ -74,7 +74,7 @@ class SGD:
                 break
 
         # Plot the loss over epochs
-        plt.plot(range(len(self.losses)), self.losses, "b-", linewidth=2)
+        plt.plot(range(len(self.losses)), self.losses, "b-", linewidth=1)
         plt.xlabel("Epoch")
         plt.ylabel("Loss (MSE)")
         plt.title("Loss function over epochs")
