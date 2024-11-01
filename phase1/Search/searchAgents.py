@@ -76,17 +76,16 @@ def cornersHeuristic(state, problem):
                 break
 
     # --- 4. Penalizing the number of unexplored corners ---
-    unexplored_corner_penalty = num_remaining_corners * 5  # Increase this factor if needed
+    unexplored_corner_penalty = num_remaining_corners * 5
 
     # --- 5. Dynamic weighting based on the number of remaining corners ---
-    if num_remaining_corners > 3:
-        weighted_mst = mst_cost * 1.5  # Give more importance to MST when many corners remain
-        weighted_greedy = total_greedy_cost * 0.5  # Less important for longer paths
-        weighted_farthest = farthest_distance * 0.8  # Slightly reduce farthest distance's weight
-    else:
-        weighted_mst = mst_cost * 0.8  # MST is less relevant for fewer corners
-        weighted_greedy = total_greedy_cost * 1.2  # Greedy pathfinding is more useful for fewer corners
-        weighted_farthest = farthest_distance * 1.5  # Give farthest distance more importance when close to finishing
+    # Weights dynamically adjusted based on the number of remaining corners
+    # More remaining corners -> higher MST weight; fewer corners -> higher greedy/farthest weights
+    weight_factor = num_remaining_corners / max(len(problem.corners), 1)  # Proportion of corners left
+
+    weighted_mst = mst_cost * (1 + weight_factor)       # More weight to MST when many corners are left
+    weighted_greedy = total_greedy_cost * (1 + (1 - weight_factor))  # More weight to Greedy for fewer corners
+    weighted_farthest = farthest_distance * (1 + (1 - weight_factor))  # More weight to Farthest when corners reduce
 
     # --- 6. Final heuristic: combining all parts with dynamic weights and penalties ---
     heuristic_value = max(weighted_greedy, weighted_mst, weighted_farthest) + unexplored_corner_penalty
