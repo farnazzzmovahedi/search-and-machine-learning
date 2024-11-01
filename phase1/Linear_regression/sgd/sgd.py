@@ -59,7 +59,7 @@ class SGD:
             self.losses.append(loss)
             self.learning_rates.append(self.learning_rate)
 
-            if epoch % 10 == 0:
+            if epoch % 100 == 0:
                 r2 = r2_score(y, y_pred)
                 print(f"Epoch {epoch}: Loss {loss}, R² {r2}")
             if np.linalg.norm(gradient_weights) < self.tolerance:

@@ -15,3 +15,7 @@ def preprocess_data(df, target_column='FloodProbability'):
 
 def normalize_features(X):
     return (X - np.mean(X, axis=0)) / np.std(X, axis=0)
+
+
+def pca():
+    pass
